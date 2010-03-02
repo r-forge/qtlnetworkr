@@ -62,7 +62,7 @@ style="FONT-SIZE: 20pt" size="4"><span class="black" lang="en-US" xml:lang="en-U
 <p>Launch QTLNetworkR by command <em>library(QTLNetworkR)</em> within R and restart it by command <em>QTLNetworkR()</em>.</p>
 <p>&nbsp;</p>
 <p><strong>Download</strong></p>
-<p><a href="https://r-forge.r-project.org/projects/rqtlnetwork/">QTLNetworkR</a></p>
+<p><a href="https://r-forge.r-project.org/projects/qtlnetworkr/">QTLNetworkR</a></p>
 <p><a href="QTLNetworkR_Manual.pdf">User Manual</a></p>
 <p><a href="Brief_Manual_of_QTLNetworkR.pdf">Brief Manual</a></p>
 <p><a href="data.zip">Example Data</a></p>
