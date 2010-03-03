@@ -4,3 +4,5 @@
   *change some warning.
 2009-6-24
   *add subdirectory /R/sysdata.rda file, make environment .rqtlnetwork works, so it don't need to generate r object in .GlobalEnv
+2010-2-10
+  *rename the package by QTLNetworkR
