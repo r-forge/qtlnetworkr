@@ -994,8 +994,8 @@ function(){
         grid.edit(gPath("axis2","labels"),gp=gpar(font=ylabelFont,cex=ylabelFontSize))
         grid.segments(x0=unit(unique(x),"native"),y0=unit(0,"npc"),
                       x1=unit(unique(x),"native"),y1=unit(0.01,"npc"))
-        grid.text("Value",x=unit(-3,"lines"), y=unit(0.54,"npc"),rot=90)
-        grid.text("F",x=unit(-3,"lines"), y=unit(0.35,"npc"),rot=90,gp=gpar(font=3))
+        grid.text("F Value",x=unit(-3,"lines"), y=unit(0.54,"npc"),rot=90)
+        #grid.text("F",x=unit(-3,"lines"), y=unit(0.35,"npc"),rot=90,gp=gpar(font=3))
   }
 
   QTLeffectPlot<-function(){
