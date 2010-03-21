@@ -1430,7 +1430,9 @@ function(){
     SymbolSize<-as.numeric(svalue(widgets$symbol))
     ADspace<-as.numeric(svalue(widgets$ADspace))/10
 
-
+    mapfile<-get("mapfile",envir=.qtlnetworkr)
+    qnkfile<-get("qnkfile",envir=.qtlnetworkr)
+    traitlth<-get("traitlth",envir=.qtlnetworkr)
 
     trait_qtl<-grep("_plot_QTL",qnkfile[,1])
     trait_epi<-grep("_plot_epistasis",qnkfile[,1])
