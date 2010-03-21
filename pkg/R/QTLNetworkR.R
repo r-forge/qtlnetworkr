@@ -362,6 +362,7 @@ function(){
       trait_qtl<-grep("_plot_QTL",qnkfile[,1])
       trait_epi<-grep("_plot_epistasis",qnkfile[,1])
       trait_epi1<-grep("_epistasis_effect",qnkfile[,1])
+      traitpos<-grep("_trait",qnkfile[,1])
       #print(trait_epi)
       allow_trait<-0
       k<-1
