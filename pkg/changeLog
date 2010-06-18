@@ -6,3 +6,9 @@
   *add subdirectory /R/sysdata.rda file, make environment .rqtlnetwork works, so it don't need to generate r object in .GlobalEnv
 2010-2-10
   *rename the package by QTLNetworkR
+2010-5-31
+  *Multiple traits for QE
+2010-6-10
+  *Merge QTLs with crossed confidence interval
+2010-6-18
+  *Use text to distinguish different environments
