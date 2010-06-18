@@ -1,8 +1,7 @@
-`QTLNetworkR` <-
-function(){
+`QTLNetworkR` <-function(){
   #.qtlnetworkr<<-new.env()
   color<-colors()
-  cl<-color[c(552,26,32,47,68,73,81,84,100,142,254,362,372,536,541,547,455,445)]#,0:20*5+152,133)]
+  cl<-color[c(552,26,254,32,47,68,73,81,84,100,142,362,372,536,541,547,455,445)]#,0:20*5+152,133)]
   linetype<-c("solid","dashed","dotted","dotdash","longdash","twodash","F8","431313","22848222")
   linetype<-rep(linetype,4)
   assign("traitlth",NA, envir=.qtlnetworkr)
@@ -19,9 +18,30 @@ function(){
 
   tmp <- gframe("Files", container=gp, expand=TRUE)
   lyout<-glayout(container=tmp)
-  lyout[1,1]<- gbutton("QNK File...", cont = lyout, handler = function(h,...) {
-      std <- gfile("Select QNK File...")
+  lyout[1,1]<-gbutton("Map File...", cont=lyout,
+        handler = function(h,...) {
+        std<-gfile(text="Select Map File...",filter=list("Map files" = list(patterns = c("*.map")),"All files"=list(patterns=c("*"))))
+        if(std != "")
+        {
+          mystr<-strsplit(std,split="\\",fixed=T)[[1]]
+          mystr.lth<-mystr[length(mystr)]
+          mydir<-substr(std,1,stop=(nchar(std)-nchar(mystr.lth)-1))
+          setwd(mydir)
+          x <- read.table(std,fill=T,colClasses="character")
+          y <- 1:as.numeric(x[grep("_c|Chromosome",x[,1]),2])
+          assign("mapfile",x, envir=.qtlnetworkr)
+          assign("chromosome",y, envir=.qtlnetworkr)
+          svalue(widgets$map)<-std
+        }
+    })
+  lyout[1,2]<-(widgets$map<-gedit(text="",cont=lyout))
+  lyout[2,1]<- gbutton("QNK File...", cont = lyout, handler = function(h,...) {
+      std <- gfile("Select QNK File...",filter=list("QNK files" = list(patterns = c("*.qnk")),"All files"=list(patterns=c("*"))))
       if(std != "") {
+        mystr<-strsplit(std,split="\\",fixed=T)[[1]]
+        mystr.lth<-mystr[length(mystr)]
+        mydir<-substr(std,1,stop=(nchar(std)-nchar(mystr.lth)-1))
+        setwd(mydir)
         x <- read.table(std,fill=T,colClasses="character",
                col.names=paste("col",1:max(count.fields(std))))
         y <- length(grep("_trait",x[,1]))
@@ -32,20 +52,8 @@ function(){
         svalue(widgets$qnk)<-std
       }
   })
-  lyout[1,2]<-(widgets$qnk<-gedit(text="",cont=lyout))
-  lyout[2,1]<-gbutton("Map File...", cont=lyout,
-        handler = function(h,...) {
-        std<-gfile(text="Select Map File...")
-        if(std != "")
-        {
-          x <- read.table(std,fill=T,colClasses="character")
-          y <- 1:as.numeric(x[grep("_c|Chromosome",x[,1]),2])
-          assign("mapfile",x, envir=.qtlnetworkr)
-          assign("chromosome",y, envir=.qtlnetworkr)
-          svalue(widgets$map)<-std
-        }
-    })
-  lyout[2,2]<-(widgets$map<-gedit(text="",cont=lyout))
+  lyout[2,2]<-(widgets$qnk<-gedit(text="",cont=lyout))
+
   ##prepare for data file ready
   nb = gnotebook(cont = gp)
   MI = ggroup(horizontal=FALSE, cont=nb, label="MI")
@@ -65,6 +73,13 @@ function(){
             #assign("std",myselect.list(list=as.character(1:traitlth),multiple=T),envir=.GlobalEnv)
             std<-myselect.list(list=get("traitname",envir=.qtlnetworkr),multiple=TRUE)
             svalue(widgets$trait)<-toString(std)
+            svalue(widgets$QTLtrait)<-toString(std)
+            svalue(widgets$Effectrait)<-toString(std)
+            svalue(widgets$twodtrait)<-toString(std[1])
+            svalue(widgets$epitrait)<-toString(std[1])
+            svalue(widgets$QTLNtrait)<-toString(std)
+            svalue(widgets$color)<-toString(cl[1:length(std)])
+            svalue(widgets$QTLcolor)<-toString(cl[1:length(std)])
         }
     })
   lyout[1,2]<-(widgets$trait<-gedit("",cont=lyout))
@@ -129,7 +144,14 @@ function(){
         {
             #assign("std",myselect.list(list=as.character(1:traitlth),multiple=T),envir=.GlobalEnv)
             std<-myselect.list(list=get("traitname",envir=.qtlnetworkr),multiple=TRUE)
+            svalue(widgets$trait)<-toString(std)
             svalue(widgets$QTLtrait)<-toString(std)
+            svalue(widgets$Effectrait)<-toString(std)
+            svalue(widgets$twodtrait)<-toString(std[1])
+            svalue(widgets$epitrait)<-toString(std[1])
+            svalue(widgets$QTLNtrait)<-toString(std)
+            svalue(widgets$color)<-toString(cl[1:length(std)])
+            svalue(widgets$QTLcolor)<-toString(cl[1:length(std)])
         }
     })
   lyout[1,2]<-(widgets$QTLtrait<-gedit("",cont=lyout))
@@ -194,8 +216,15 @@ function(){
     {
         if(!is.na(get("traitname",envir=.qtlnetworkr)[1]))
         {
-            std<-myselect.list(list=get("traitname",envir=.qtlnetworkr),multiple=FALSE)
+            std<-myselect.list(list=get("traitname",envir=.qtlnetworkr),multiple=TRUE)
+            svalue(widgets$trait)<-toString(std)
+            svalue(widgets$QTLtrait)<-toString(std)
             svalue(widgets$Effectrait)<-toString(std)
+            svalue(widgets$twodtrait)<-toString(std)
+            svalue(widgets$epitrait)<-toString(std)
+            svalue(widgets$QTLNtrait)<-toString(std)
+            svalue(widgets$color)<-toString(cl[1:length(std)])
+            svalue(widgets$QTLcolor)<-toString(cl[1:length(std)])
         }
     })
   lyout[1,2]<-(widgets$Effectrait<-gedit("",cont=lyout))
@@ -217,6 +246,14 @@ function(){
   lyout[5,2]<-(widgets$EffectMinY<-gedit("",cont=lyout))
   lyout[5,3]<-gbutton("MaxYLabel",cont=lyout)
   lyout[5,4]<-(widgets$EffectMaxY<-gedit("",cont=lyout))
+  lyout[6,1]<-gbutton("SymbolSize",cont=lyout)
+  lyout[6,2]<-(widgets$EffectSymbolSize<-gedit("1",cont=lyout))
+  lyout[6,3]<-gbutton("EnvTextPos",cont=lyout)
+  lyout[6,4]<-(widgets$TextPos<-gedit("3",cont=lyout))
+  lyout[7,1]<-gbutton("EnvTextFont",cont=lyout)
+  lyout[7,2]<-(widgets$QeFont<-gcombobox(c("1","2","3","4"),cont=lyout))
+  lyout[7,3]<-gbutton("EnvTextFontSize",cont=lyout)
+  lyout[7,4]<-(widgets$QeFontSize<-gedit("1",cont=lyout))
   button.group <- ggroup(container = QTLeffect)
   ## Push buttons to right
   addSpring(button.group)
@@ -234,7 +271,12 @@ function(){
         if(!is.na(get("traitname",envir=.qtlnetworkr)[1]))
         {
             std<-myselect.list(list=get("traitname",envir=.qtlnetworkr),multiple=FALSE)
+            svalue(widgets$trait)<-toString(std)
+            svalue(widgets$QTLtrait)<-toString(std)
+            svalue(widgets$Effectrait)<-toString(std)
             svalue(widgets$twodtrait)<-toString(std)
+            svalue(widgets$epitrait)<-toString(std)
+            svalue(widgets$QTLNtrait)<-toString(std)
         }
     })
   lyout[1,2]<-(widgets$twodtrait<-gedit("",cont=lyout))
@@ -250,7 +292,7 @@ function(){
   lyout[4,2]<-(widgets$leftBottomFont<-gcombobox(c("1","2","3","4"),cont=lyout))
   lyout[4,3]<-gbutton("LeftBottomFontSize",cont=lyout)
   lyout[4,4]<-(widgets$leftBottomFontSize<-gedit("1",cont=lyout))
-  
+
   button.group <- ggroup(container = MII)
   ## Push buttons to right
   addSpring(button.group)
@@ -270,7 +312,14 @@ function(){
         {
             allow<-AllowTrait()
             std<-myselect.list(list=get("traitname",envir=.qtlnetworkr)[allow],multiple=FALSE)
+            svalue(widgets$trait)<-toString(std)
+            svalue(widgets$QTLtrait)<-toString(std)
+            svalue(widgets$Effectrait)<-toString(std)
+            svalue(widgets$twodtrait)<-toString(std)
             svalue(widgets$epitrait)<-toString(std)
+            svalue(widgets$QTLNtrait)<-toString(std)
+            svalue(widgets$color)<-toString(cl[1:length(std)])
+            svalue(widgets$QTLcolor)<-toString(cl[1:length(std)])
         }
     })
   lyout[1,2]<-(widgets$epitrait<-gedit("",cont=lyout))
@@ -292,7 +341,7 @@ function(){
   lyout[5,2]<-(widgets$epi.rightTopFont<-gcombobox(c("1","2","3","4"),cont=lyout))
   lyout[5,3]<-gbutton("RightTopFontSize",cont=lyout)
   lyout[5,4]<-(widgets$epi.rightTopFontSize<-gedit("0.6",cont=lyout))
-    
+
   button.group <- ggroup(container = Epistasis)
   ## Push buttons to right
   addSpring(button.group)
@@ -311,7 +360,14 @@ function(){
         if(!is.na(get("traitname",envir=.qtlnetworkr)[1]))
         {
             std<-myselect.list(list=get("traitname",envir=.qtlnetworkr),multiple=TRUE)
+            svalue(widgets$trait)<-toString(std)
+            svalue(widgets$QTLtrait)<-toString(std)
+            svalue(widgets$Effectrait)<-toString(std)
+            svalue(widgets$twodtrait)<-toString(std[1])
+            svalue(widgets$epitrait)<-toString(std[1])
             svalue(widgets$QTLNtrait)<-toString(std)
+            svalue(widgets$color)<-toString(cl[1:length(std)])
+            svalue(widgets$QTLcolor)<-toString(cl[1:length(std)])
 
         }
     })
@@ -327,21 +383,23 @@ function(){
   lyout[3,3]<-gbutton("TextPosition",cont=lyout)
   lyout[3,4]<-(widgets$textpos<-gedit("3",cont=lyout))
   lyout[4,1]<-gbutton("ChromosomeFont",cont=lyout)
-  lyout[4,2]<-(widgets$chrFont<-gedit("2",cont=lyout))
+  lyout[4,2]<-(widgets$chrFont<-gcombobox(c("1","2","3","4"),cont=lyout))
   lyout[4,3]<-gbutton("ChromosomeFontSize",cont=lyout)
   lyout[4,4]<-(widgets$chrFontSize<-gedit("1",cont=lyout))
   lyout[5,1]<-gbutton("NotationFont",cont=lyout)
-  lyout[5,2]<-(widgets$notationFont<-gedit("1",cont=lyout))
+  lyout[5,2]<-(widgets$notationFont<-gcombobox(c("1","2","3","4"),cont=lyout))
   lyout[5,3]<-gbutton("NotationFontSize",cont=lyout)
   lyout[5,4]<-(widgets$notationFontSize<-gedit("1",cont=lyout))
   lyout[6,1]<-gbutton("TextFont",cont=lyout)
-  lyout[6,2]<-(widgets$TextFont<-gedit("1",cont=lyout))
+  lyout[6,2]<-(widgets$TextFont<-gcombobox(c("1","2","3","4"),cont=lyout))
   lyout[6,3]<-gbutton("TextFontSize",cont=lyout)
   lyout[6,4]<-(widgets$TextFontSize<-gedit("1",cont=lyout))
   lyout[7,1]<-gbutton("SymbolSize",cont=lyout)
   lyout[7,2]<-(widgets$symbol<-gedit("1",cont=lyout))
-  lyout[7,3]<-gbutton("Space",cont=lyout)
+  lyout[7,3]<-gbutton("SpaceAD",cont=lyout)
   lyout[7,4]<-(widgets$ADspace<-gedit("3",cont=lyout))
+  lyout[8,1]<-gbutton("ParallelDis",cont=lyout)
+  lyout[8,2]<-(widgets$ParalDis<-gedit("4",cont=lyout))
   button.group <- ggroup(container = QTLNetwork)
   ## Push buttons to right
   addSpring(button.group)
@@ -369,19 +427,12 @@ function(){
       if(length(trait_qtl)!=length(trait_epi1)){
           for(i in 1:(length(trait_qtl)-1)){
               if(trait_epi1[k]>traitpos[i]&trait_epi1[k]<traitpos[i+1])  {allow_trait[k]<-i;k<-k+1}
-             
+
           }
           if(trait_epi1[length(trait_epi1)]>trait_qtl[length(trait_qtl)]) allow_trait[k]<-length(trait_qtl)
+      }else{
+          allow_trait<-1:length(trait_qtl)
       }
-      #u<-n<-1
-      #delete<-0
-      #if(length(trait_epi)!=traitlth){
-      #    for(i in 1:traitlth){
-      #        if(trait_epi[u]==(trait_qtl[i]+5)){if(u<length(trait_epi)) u<-u+1}else{delete[n]<-i;n<-n+1}
-      #    }
-      #}
-      #allow_trait<-1:traitlth
-      #if(delete[1]!=0) allow_trait<-allow_trait[-delete]
       return(allow_trait)
   }
 
@@ -417,6 +468,12 @@ function(){
       y=sin(theta)*radii+y
       grid.polygon(x,y,gp=gpar(col=col,fill=fill))
   }
+  crossing<-function(A.start,A.end,B.start,B.end){
+        if(A.start<=B.start&A.end>=B.start) return(TRUE)
+        else if(A.start<=B.end&A.end>=B.end) return(TRUE)
+        else if(A.start>=B.start&A.end<=B.end) return(TRUE)
+        else return(FALSE)
+  }
 
   MIPlot<-function(){
       if(svalue(widgets$trait)=="") stop("Select Trait...")
@@ -424,7 +481,7 @@ function(){
       if(svalue(widgets$QTLchr)=="") stop("You should select at least one chromosome...")
       #traitVal<-which(is.element(strsplit(svalue(widgets$trait),split=", ")[[1]],get("traitname",envir=.qtlnetworkr)))
       traitVal<-as.numeric(lapply(strsplit(svalue(widgets$trait),split=", ")[[1]],function(item){
-                x<-grep(item,get("traitname",envir=.qtlnetworkr))
+                x<-grep(item,get("traitname",envir=.qtlnetworkr),fixed=TRUE)
             }))
       chr<-strsplit(svalue(widgets$chr),split=",")[[1]]
       if(chr[1]!="all") chr<-as.numeric(chr)
@@ -756,7 +813,7 @@ function(){
     if(svalue(widgets$QTLcolor)=="") stop("Select colors...")
     if(svalue(widgets$QTLchr)=="") stop("You should select at least one chromosome...")
       traitVal<-as.numeric(lapply(strsplit(svalue(widgets$QTLtrait),split=", ")[[1]],function(item){
-                x<-grep(item,get("traitname",envir=.qtlnetworkr))
+                x<-grep(item,get("traitname",envir=.qtlnetworkr),fixed=TRUE)
             }))
       #traitVal<-as.numeric(strsplit(svalue(widgets$QTLtrait),split=",")[[1]])
       colorVal<-strsplit(svalue(widgets$QTLcolor),split=",")[[1]]
@@ -958,7 +1015,7 @@ function(){
 
         }
         #for(i in 1:length(xatt)){
-        if(chr[1]=="all"|length(chr)>1){       
+        if(chr[1]=="all"|length(chr)>1){
                grid.segments(x0=unit(xatt,"native"),y0=unit(0,"npc"),
                              x1=unit(xatt,"native"),y1=unit(1,"npc"),
                              gp=gpar(col="white",lwd=0.2+LineWidth))
@@ -1000,8 +1057,8 @@ function(){
   }
 
   QTLeffectPlot<-function(){
-      trait<-as.numeric(lapply(strsplit(svalue(widgets$Effectrait),split=",")[[1]],function(item){
-                x<-grep(item,get("traitname",envir=.qtlnetworkr))
+      trait<-as.numeric(lapply(strsplit(svalue(widgets$Effectrait),split=", ")[[1]],function(item){
+                x<-grep(item,get("traitname",envir=.qtlnetworkr),fixed=TRUE)
             }))
       #trait<-which(is.element(strsplit(svalue(widgets$Effectrait),split=", ")[[1]],get("traitname",envir=.qtlnetworkr)))
       #print(get("traitname",envir=.qtlnetworkr))
@@ -1017,69 +1074,226 @@ function(){
       NotationFontSize<-as.numeric(svalue(widgets$EffectNotationFontSize ))
       MinY<-svalue(widgets$EffectMinY)
       MaxY<-svalue(widgets$EffectMaxY)
+      SymbolSize<-svalue(widgets$EffectSymbolSize)
+      TextPos<-as.numeric(svalue(widgets$TextPos))
+      QeFont<-as.numeric(svalue(widgets$QeFont ))
+      QeFontSize<-as.numeric(svalue(widgets$QeFontSize ))
 
       qnkfile<-get("qnkfile",envir=.qtlnetworkr)
 
       color<-c("blue","blueviolet","brown","cyan","green","magenta","yellow","tomato","slateblue2","dodgerblue","grey")
-      pchIndex<-rep(21:25,3)
+      pchIndex<-21:25
+      if(length(trait)>5) stop("Number of trait should be less than 5!")
+      traitname<-qnkfile[grep("^_trait$",qnkfile[,1])[trait],3]
       Qe_start<-grep("^_QTL_effect$",qnkfile[,1])[trait]+1
       Qe_end<-grep("^_QTL_heritability$",qnkfile[,1])[trait]-1
       Qe_ptest<-grep(";",qnkfile[Qe_start,])-1
-      Apos<-grep("^A$",qnkfile[Qe_start,])
-      AEpos<-grep("^AE",qnkfile[Qe_start,])
-      Avalue<-qnkfile[(Qe_start+1):Qe_end,Apos]
+      Apos<-grep("^A$",qnkfile[Qe_start[1],])
+      AEpos<-grep("^AE",qnkfile[Qe_start[1],])
+      if(length(trait)>1){
+          for(i in 1:length(trait)){
+              if(i==1) {
+              Avalue<-qnkfile[(Qe_start[i]+1):Qe_end[i],Apos]
+              A.Pvalue<-qnkfile[(Qe_start[i]+1):Qe_end[i],Apos+2]
+              name.A<-qnkfile[(Qe_start[i]+1):Qe_end[i],1]
+              }
+              else if(i>1){
+              Avalue<-bind(Avalue,qnkfile[(Qe_start[i]+1):Qe_end[i],Apos])
+              A.Pvalue<-bind(A.Pvalue,qnkfile[(Qe_start[i]+1):Qe_end[i],Apos+2])
+              name.A<-bind(name.A,qnkfile[(Qe_start[i]+1):Qe_end[i],1])
+              }
+          }
+      }else{
+          Avalue<-qnkfile[(Qe_start+1):Qe_end,Apos]
+          A.Pvalue<-qnkfile[(Qe_start+1):Qe_end,Apos]
+          name.A<-qnkfile[(Qe_start+1):Qe_end,1]
+      }
       Avalue<-as.numeric(Avalue)
-      #Apvalue<-qnkfile[(Qe_start[1]+1):Qe_end[1],Apos+2]
-      AEvalue<-qnkfile[(Qe_start+1):Qe_end[1],AEpos]
-      AEpvalue<-qnkfile[(Qe_start+1):Qe_end[1],AEpos+2]
-      AEvalue<-apply(AEvalue,2,function(item){
-                      item<-as.numeric(item)
-                      })
-      colnames(AEvalue)<-qnkfile[Qe_start,AEpos]
-      rownames(AEvalue)<-qnkfile[(Qe_start+1):Qe_end,1]
-
-      AEpvalue<-apply(AEpvalue,c(1,2),function(item){
-                      x<-ifelse(item<0.05,TRUE,FALSE)
-                      })
-      ##detect D
-      Dpos<-grep("^D$",qnkfile[Qe_start,])
-      if(length(Dpos)==1)
-      {
-      DEpos<-grep("^DE",qnkfile[Qe_start,])
-      Dvalue<-qnkfile[(Qe_start+1):Qe_end,Dpos]
-      Dvalue<-as.numeric(Dvalue)
-      #Apvalue<-qnkfile[(Qe_start[1]+1):Qe_end[1],Apos+2]
-      DEvalue<-qnkfile[(Qe_start+1):Qe_end[1],DEpos]
-      DEpvalue<-qnkfile[(Qe_start+1):Qe_end[1],AEpos+2]
-      DEvalue<-apply(DEvalue,2,function(item){
-                      item<-as.numeric(item)
-                      })
-      colnames(DEvalue)<-qnkfile[Qe_start,DEpos]
-      rownames(DEvalue)<-qnkfile[(Qe_start+1):Qe_end,1]
-
-      DEpvalue<-apply(DEpvalue,c(1,2),function(item){
-                      x<-ifelse(item<0.05,TRUE,FALSE)
-                      })
-      DDEvalue<-DEvalue+Dvalue
+      A.Pvalue<-as.numeric(A.Pvalue)
+      trait.info<-Qe_end-Qe_start
+      for(i in 1:length(A.Pvalue)){
+          if(A.Pvalue[i]<0.05) A.Pvalue[i]<-TRUE else A.Pvalue[i]<-FALSE
       }
 
-      AAEvalue<-AEvalue+Avalue
-      if(MinY!="") {Miny<-as.numeric(MinY)
+      #Apvalue<-qnkfile[(Qe_start[1]+1):Qe_end[1],Apos+2]
+      if(length(AEpos)>0){
+          if(length(trait)==1){
+              AEvalue<-qnkfile[(Qe_start+1):Qe_end[1],AEpos]
+              AEpvalue<-qnkfile[(Qe_start+1):Qe_end[1],AEpos+2]
+              AEvalue<-apply(AEvalue,2,function(item){
+                              item<-as.numeric(item)
+                              })
+              #colnames(AEvalue)<-qnkfile[Qe_start,AEpos]
+              #rownames(AEvalue)<-qnkfile[(Qe_start+1):Qe_end,1]
+              AEpvalue<-apply(AEpvalue,c(1,2),function(item){
+                          x<-ifelse(item<0.05,TRUE,FALSE)
+                          })
+          }else{
+              for(i in 1:length(trait)){
+                  if(i==1){
+                      AEvalue<-qnkfile[(Qe_start[i]+1):Qe_end[i],AEpos]
+                      AEpvalue<-qnkfile[(Qe_start[i]+1):Qe_end[i],AEpos+2]
+                      AEvalue<-apply(AEvalue,2,function(item){
+                                      item<-as.numeric(item)
+                                      })
+                      #colnames(AEvalue)<-qnkfile[Qe_start[i],AEpos]
+                      #rownames(AEvalue)<-qnkfile[(Qe_start[i]+1):Qe_end[i],1]
+                      AEpvalue<-apply(AEpvalue,c(1,2),function(item){
+                                  x<-ifelse(item<0.05,TRUE,FALSE)
+                                  })
+                  }else{
+                      AEvalue1<-qnkfile[(Qe_start[i]+1):Qe_end[i],AEpos]
+                      AEpvalue1<-qnkfile[(Qe_start[i]+1):Qe_end[i],AEpos+2]
+                      AEvalue1<-apply(AEvalue1,2,function(item){
+                                      item<-as.numeric(item)
+                                      })
+                      #colnames(AEvalue1)<-qnkfile[Qe_start[i],AEpos]
+                      #rownames(AEvalue1)<-qnkfile[(Qe_start[i]+1):Qe_end[i],1]
+                      AEpvalue1<-apply(AEpvalue1,c(1,2),function(item){
+                                  x<-ifelse(item<0.05,TRUE,FALSE)
+                                  })
+                      AEvalue<-rbind(AEvalue,AEvalue1)
+                      AEpvalue<-rbind(AEpvalue,AEpvalue1)
+                  }
+              }
+          }
+      }
+
+      name.uniq<-unique(name.A)
+      dup.idx<-anyDuplicated(name.A)
+      ##detect D
+      Dpos<-grep("^D$",qnkfile[Qe_start[1],])
+      if(length(Dpos)==1){
+          if(length(trait)>1){
+              for(i in 1:length(trait)){
+                  if(i==1) {
+                  Dvalue<-qnkfile[(Qe_start[i]+1):Qe_end[i],Dpos]
+                  D.Pvalue<-qnkfile[(Qe_start[i]+1):Qe_end[i],Dpos+2]
+                  }
+                  else if(i>1){
+                  Dvalue<-bind(Dvalue,qnkfile[(Qe_start[i]+1):Qe_end[i],Dpos])
+                  D.Pvalue<-bind(D.Pvalue,qnkfile[(Qe_start[i]+1):Qe_end[i],Dpos+2])
+                  }
+              }
+          }else{
+              Dvalue<-qnkfile[(Qe_start+1):Qe_end,Dpos]
+              D.Pvalue<-qnkfile[(Qe_start+1):Qe_end,Dpos+2]
+          }
+          Dvalue<-as.numeric(Dvalue)
+          D.Pvalue<-as.numeric(D.Pvalue)
+          for(i in 1:length(D.Pvalue))
+          {
+              if(D.Pvalue[i]<0.05) D.Pvalue[i]<-TRUE else D.Pvalue[i]<-FALSE
+          }
+      }
+
+      if(length(Dpos)==1)
+      {
+        DEpos<-grep("^DE",qnkfile[Qe_start[1],])
+        if(length(DEpos)>0){
+            if(length(trait)==1){
+
+                #Apvalue<-qnkfile[(Qe_start[1]+1):Qe_end[1],Apos+2]
+                DEvalue<-qnkfile[(Qe_start[1]+1):Qe_end[1],DEpos]
+                DEpvalue<-qnkfile[(Qe_start[1]+1):Qe_end[1],AEpos+2]
+                DEvalue<-apply(DEvalue,2,function(item){
+                                item<-as.numeric(item)
+                                })
+                #colnames(DEvalue)<-qnkfile[Qe_start,DEpos]
+                #rownames(DEvalue)<-qnkfile[(Qe_start+1):Qe_end,1]
+
+                DEpvalue<-apply(DEpvalue,c(1,2),function(item){
+                                x<-ifelse(item<0.05,TRUE,FALSE)
+                                })
+            }else{
+                for(i in 1:length(trait)){
+                    if(i==1){
+                        DEvalue<-qnkfile[(Qe_start[i]+1):Qe_end[i],DEpos]
+                        DEpvalue<-qnkfile[(Qe_start[i]+1):Qe_end[i],DEpos+2]
+                        DEvalue<-apply(DEvalue,2,function(item){
+                                        item<-as.numeric(item)
+                                        })
+                        #colnames(AEvalue)<-qnkfile[Qe_start[i],AEpos]
+                        #rownames(AEvalue)<-qnkfile[(Qe_start[i]+1):Qe_end[i],1]
+                        DEpvalue<-apply(DEpvalue,c(1,2),function(item){
+                                    x<-ifelse(item<0.05,TRUE,FALSE)
+                                    })
                     }else{
-                        if(length(Dpos)!=1) {
-                        MinY<-floor(min(Avalue,AAEvalue))
-                        }else{
-                        MinY<-floor(min(Avalue,AAEvalue,Dvalue,DDEvalue))
-                        }
+                        DEvalue1<-qnkfile[(Qe_start[i]+1):Qe_end[i],DEpos]
+                        DEpvalue1<-qnkfile[(Qe_start[i]+1):Qe_end[i],DEpos+2]
+                        DEvalue1<-apply(DEvalue1,2,function(item){
+                                        item<-as.numeric(item)
+                                        })
+                        #colnames(DEvalue1)<-qnkfile[Qe_start[i],DEpos]
+                        #rownames(DEvalue1)<-qnkfile[(Qe_start[i]+1):Qe_end[i],1]
+                        DEpvalue1<-apply(DEpvalue1,c(1,2),function(item){
+                                    x<-ifelse(item<0.05,TRUE,FALSE)
+                                    })
+                        DEvalue<-rbind(DEvalue,DEvalue1)
+                        DEpvalue<-rbind(DEpvalue,DEpvalue1)
                     }
-      if(MaxY!="") {MaxY<-as.numeric(MaxY)
-                    }else{
-                        if(length(Dpos)!=1) {
-                        MaxY<-ceiling(max(Avalue,AAEvalue))
-                        }else{
-                        MaxY<-ceiling(max(Avalue,AAEvalue,Dvalue,DDEvalue))
-                        }
-                    }
+                }
+            }
+            DDEvalue<-DEvalue+Dvalue
+        }
+      }
+
+      if(length(AEpos)>0) AAEvalue<-AEvalue+Avalue
+      if(MinY!="") {
+        MinY<-as.numeric(MinY)
+      }else{
+          if(length(Dpos)==0) {
+            if(length(AEpos)>0){
+              MinY<-floor(min(Avalue,AAEvalue))
+            }else MinY<-floor(min(Avalue))
+          }else{
+            if(length(AEpos)>0&length(AEpos)>0&length(DEpos)>0){
+              MinY<-floor(min(Avalue,AAEvalue,Dvalue,DDEvalue))
+            }else if(length(AEpos)>0&length(AEpos)>0&length(DEpos)==0){
+              MinY<-floor(min(Avalue,AAEvalue,Dvalue))
+            }else if(length(AEpos)>0&length(AEpos)==0&length(DEpos)>0){
+              MinY<-floor(min(Avalue,DDEvalue,Dvalue))
+            }else if(length(AEpos)>0&length(AEpos)==0&length(DEpos)==0){
+              MinY<-floor(min(Avalue,Dvalue))
+            }
+          }
+      }
+      if(MaxY!="") {
+        MaxY<-as.numeric(MaxY)
+      }else{
+          if(length(Dpos)==0) {
+            if(length(AEpos)>0){
+              MaxY<-ceiling(max(Avalue,AAEvalue))
+            }else MaxY<-ceiling(max(Avalue))
+          }else{
+            if(length(AEpos)>0&length(AEpos)>0&length(DEpos)>0){
+              MaxY<-ceiling(max(Avalue,AAEvalue,Dvalue,DDEvalue))
+            }else if(length(AEpos)>0&length(AEpos)>0&length(DEpos)==0){
+              MaxY<-ceiling(max(Avalue,AAEvalue,Dvalue))
+            }else if(length(AEpos)>0&length(AEpos)==0&length(DEpos)>0){
+              MaxY<-ceiling(max(Avalue,DDEvalue,Dvalue))
+            }else if(length(AEpos)>0&length(AEpos)==0&length(DEpos)==0){
+              MaxY<-ceiling(max(Avalue,Dvalue))
+            }
+          }
+      }
+      ###x-axis position
+      posA<-ifelse(length(Dpos)==1,0.66,0.5)
+      if(length(Dpos)==1) posD<-0.33
+      if(length(trait)==1){
+          A.x<-1:length(Avalue)-posA
+          if(length(Dpos)==1) D.x<-1:length(Avalue)-posD
+      }else{
+          A.x.uniq<-1:length(name.uniq)-posA
+          if(length(Dpos)==1) D.x.uniq<-1:length(name.uniq)-posD
+          A.x<-0
+          if(length(Dpos)==1) D.x<-0
+          for(i in 1:length(name.A)){
+              A.x[i]<-A.x.uniq[match(name.A[i],name.uniq)]
+              if(length(Dpos)==1) D.x[i]<-D.x.uniq[match(name.A[i],name.uniq)]
+          }
+      }
+      mypch<-rep(rev(pchIndex[1:length(trait)]),times=trait.info)
 
       vplay<-grid.layout(ncol=2,widths=unit(c(8.5,1.5),c("null","null")))
       pushViewport(viewport(layout=vplay))
@@ -1087,93 +1301,116 @@ function(){
       #heights<-convertHeight(stringHeight("A"),"npc")
       legendy<-unit(19:1/21,"npc")
       legendx<-unit(rep(0,19),"npc")
-      grid.points(x=legendx[1:(length(AEvalue[1,])+1)],y=legendy[1:(length(AEvalue[1,])+1)],
-                  pch=c(20,pchIndex),gp=gpar(col=c("red",color),fill=c("red",color)))
-      grid.points(x=legendx[2:3+length(AEvalue[1,])],y=legendy[2:3+length(AEvalue[1,])],
-                  pch=c(19,1))
-      #grid.text(c("Detected","Undetected"),
-      #          x=legendx[2:3+length(AEvalue[1,])]+unit(0.1,"npc"),
-      #          y=legendy[2:3+length(AEvalue[1,])],just="left",
-      #          gp=gpar(cex=NotationFontSize,font=NotationFont))
-      #grid.text(c("A",colnames(AEvalue)),
-      #          x=legendx[1:(length(AEvalue[1,])+1)]+unit(0.1,"npc"),
-      #          y=legendy[1:(length(AEvalue[1,])+1)],just="left",
-      #          gp=gpar(cex=NotationFontSize,font=NotationFont))
-      grid.text(c("QTL",paste("Q+QE",1:length(AEvalue[1,]),sep="")),
-                x=legendx[1:(length(AEvalue[1,])+1)]+unit(0.1,"npc"),
-                y=legendy[1:(length(AEvalue[1,])+1)],just="left",
+      grid.points(x=legendx[1:length(trait)],y=legendy[1:length(trait)],
+                  pch=rev(pchIndex[1:length(trait)]),gp=gpar(fill="black",cex=SymbolSize))
+      grid.text(traitname,
+                x=legendx[1:length(trait)]+unit(0.1,"npc"),
+                y=legendy[1:length(trait)],just="left",
                 gp=gpar(cex=NotationFontSize,font=NotationFont))
-
-
+      legendx<-legendx[-(1:length(trait))]
+      legendy<-legendy[-(1:length(trait))]
+      #if(length(AEpos)>0){
+      #    grid.points(x=legendx[1:(length(AEvalue[1,])+1)],y=legendy[1:(length(AEvalue[1,])+1)],
+      #                pch=c(pchIndex[1]),gp=gpar(col=c("red",color),fill=c("red",color),cex=SymbolSize))
+      #    grid.text(c("QTL",paste("Q+QE",1:length(AEvalue[1,]),sep="")),
+      #              x=legendx[1:(length(AEvalue[1,])+1)]+unit(0.1,"npc"),
+      #              y=legendy[1:(length(AEvalue[1,])+1)],just="left",
+      #              gp=gpar(cex=NotationFontSize,font=NotationFont))
+      #}else{
+        grid.points(x=legendx[1:3],y=legendy[1:3],pch=pchIndex[1],gp=gpar(col=c("red","green","blue"),fill=c("red","green","blue"),cex=SymbolSize))
+        grid.text(c("QTL","QE","Q+QE"),x=legendx[1:3]+unit(0.1,"npc"),y=legendy[1:3],just="left",
+                    gp=gpar(cex=NotationFontSize,font=NotationFont))
+      #}
+        if(length(Dpos)==1){
+            grid.points(x=legendx[4],y=legendy[4],pch=pchIndex[1],gp=gpar(fill=c("black"),cex=SymbolSize))
+            grid.points(x=legendx[5],y=legendy[5],pch=pchIndex[1],gp=gpar(cex=SymbolSize))
+            grid.text(c("A","D"),x=legendx[4:5]+unit(0.1,"npc"),y=legendy[4:5],just="left",
+                    gp=gpar(cex=NotationFontSize,font=NotationFont))
+        }
       popViewport()
 
       pushViewport(viewport(layout.pos.col=1,name="col1"))
       pushViewport(plotViewport(c(4,4,2,1)))
-      pushViewport(viewport(xscale=c(0,length(Avalue)),yscale=c(MinY,MaxY)))
+      pushViewport(viewport(xscale=c(0,length(unique(name.A))),yscale=c(MinY,MaxY)))
       grid.segments(x0=unit(0,"npc"),y0=unit(0,"native"),
                     x1=unit(1,"npc"),y1=unit(0,"native"))
+      grid.text("0",x=unit(1,"npc")+unit(2,"mm"),y=unit(0,"native"),#just="left",
+                gp=gpar(font=YlabelFont,cex=YlabelFontSize))
       #apply(AEvalue,2,function(item){
       #     grid.points(x=unit(1:length(Avalue)-0.5,"native"),y=unit(item,"native"),
       #            pch=21,gp=gpar(col="red",fill="red"))
       #})
-      posA<-ifelse(length(Dpos)==1,0.66,0.5)
-      if(length(Dpos)==1) posD<-0.33
-      for(i in 1:length(AEpos)){
-          for(j in 1:length(AEpvalue[,1])){
-              if(AEpvalue[j,i]) {grid.points(x=unit(1:length(Avalue)-posA,"native")[j],y=unit(AAEvalue[j,i],"native"),
-                                pch=pchIndex[i],gp=gpar(col=color[i], fill=color[i]))
-                                }else{
-                                grid.points(x=unit(1:length(Avalue)-posA,"native")[j],y=unit(AAEvalue[j,i],"native"),
-                                pch=pchIndex[i],gp=gpar(col=color[i]))
-                                }
-          }
-      }
-      if(length(Dpos)==1){
-          for(i in 1:length(DEpos)){
-              for(j in 1:length(DEpvalue[,1])){
-                  if(DEpvalue[j,i]) {grid.points(x=unit(1:length(Avalue)-posD,"native")[j],y=unit(DEvalue[j,i],"native"),
-                                    pch=pchIndex[i],gp=gpar(col=color[i], fill=color[i]))
-                                    }#else{
-                                    #grid.points(x=unit(1:length(Avalue)-posD,"native")[j],y=unit(DEvalue[j,i],"native"),
-                                    #pch=pchIndex[i],gp=gpar(col=color[i]))
-                                    #}
+
+      if(length(AEpos)>0)
+      {
+          for(i in 1:length(AEpos))
+          {
+              for(j in 1:length(AEpvalue[,1]))
+              {
+                  if(AEpvalue[j,i])
+                  {
+                      if(A.Pvalue[j]){
+                          grid.points(x=unit(A.x[j],"native"),y=unit(AAEvalue[j,i],"native"),
+                                    pch=mypch[j],gp=gpar(col="blue", fill="blue",cex=SymbolSize))
+                          grid.text(i,x=unit(A.x[j],"native")+unit(TextPos,"mm"),y=unit(AAEvalue[j,i],"native"),gp=gpar(font=QeFont,cex=QeFontSize))
+                      }else{
+                          grid.points(x=unit(A.x[j],"native"),y=unit(AAEvalue[j,i],"native"),
+                                    pch=mypch[j],gp=gpar(col="green", fill="green",cex=SymbolSize))
+                          grid.text(i,x=unit(A.x[j],"native")+unit(TextPos,"mm"),y=unit(AAEvalue[j,i],"native"),gp=gpar(font=QeFont,cex=QeFontSize))
+                      }
+                  }
               }
           }
       }
+      if(length(Dpos)==1){
+        if(length(DEpos)>0){
+          for(i in 1:length(DEpos)){
+              for(j in 1:length(DEpvalue[,1])){
+                  if(DEpvalue[j,i])
+                  {
+                  if(D.Pvalue[j]){
+                          grid.points(x=unit(D.x[j],"native"),y=unit(DDEvalue[j,i],"native"),
+                                    pch=mypch[j],gp=gpar(col="blue",cex=SymbolSize))
+                          grid.text("i",x=unit(D.x[j],"native")+unit(TextPos,"mm"),y=unit(DDEvalue[j,i],"native"),gp=gpar(font=QeFont,cex=QeFontSize))
+                      }else{
+                          grid.points(x=unit(D.x[j],"native"),y=unit(AAEvalue[j,i],"native"),
+                                    pch=mypch[j],gp=gpar(col="green",cex=SymbolSize))
+                          grid.text("i",x=unit(D.x[j],"native")+unit(TextPos,"mm"),y=unit(DDEvalue[j,i],"native"),gp=gpar(font=QeFont,cex=QeFontSize))
+                      }
+                  }
+              }
+          }
+        }
+      }
 
-      #for(i in 1:length(AEpos)){
-      #    grid.points(x=unit(1:length(Avalue)-0.5,"native"),y=unit(AEvalue[,i],"native"),
-      #                pch=pchIndex[i],gp=gpar(col=color[i],fill=color[i]))
-      #}
-      #for(i in 1:length(AEpos)){
-      #    for(j in 1:length(AEpvalue[,1])){
-      #        if(!AEpvalue[j,i]) grid.points(x=unit(1:length(Avalue)-0.5,"native")[j],
-      #                                       y=unit(AEvalue[j,i],"native"),pch=4)
-      #    }
-      #}
-      grid.points(x=unit(1:length(Avalue)-posA,"native"),y=unit(Avalue,"native"),
-                  pch=20,gp=gpar(col="red",fill="red"))
-      if(length(Dpos)==1) grid.points(x=unit(1:length(Dvalue)-posD,"native"),y=unit(Dvalue,"native"),
-                                      pch=20,gp=gpar(col="red",fill="red"))
-      grid.xaxis(name="xaxis",at=1:length(Avalue)-0.5,
-                 label=rownames(AEvalue))
+      for(i in 1:length(A.Pvalue)){
+          if(A.Pvalue[i])    grid.points(x=unit(A.x[i],"native"),y=unit(Avalue[i],"native"),
+                                pch=mypch[i],gp=gpar(col="red",fill="red",cex=SymbolSize))
+      }
+      if(length(Dpos)==1) {
+          for(i in 1:length(D.Pvalue)){
+             if (D.Pvalue[i])grid.points(x=unit(D.x[i],"native"),y=unit(Dvalue[i],"native"),
+                                      pch=mypch[i],gp=gpar(col="red"))
+         }
+      }
+      grid.xaxis(name="xaxis",at=unique(A.x),
+                 label=unique(name.A))
       grid.edit(gPath("xaxis","labels"),rot=XlabelRot,gp=gpar(font=XlabelFont,cex=XlabelFontSize))
       grid.segments(x0=unit(0,"npc"),y0=unit(0,"npc"),
                     x1=unit(1,"npc"),y1=unit(0,"npc"))
-      grid.yaxis(name="yaxis",at=round(0:5*(MaxY-MinY)/5,1)+MinY,label=round(0:5*(MaxY-MinY)/5,1)+MinY)
+      grid.yaxis(name="yaxis",at=round(0:4*(MaxY-MinY)/4,1)+MinY,label=round(0:4*(MaxY-MinY)/4,1)+MinY)
       grid.edit(gPath("yaxis","labels"),gp=gpar(font=YlabelFont,cex=YlabelFontSize))
       grid.text("QTL",x=unit(0.5,"npc"),y=unit(-3,"lines"))
       grid.text("Effect",x=unit(-3,"lines"),y=unit(0.5,"npc"),rot=90)
-      grid.segments(x0=unit(1:(length(Avalue)-1),"native"),y0=unit(0,"npc"),
-                    x1=unit(1:(length(Avalue)-1),"native"),y1=unit(1,"npc"),
+      grid.segments(x0=unit(1:(length(unique(name.A))-1),"native"),y0=unit(0,"npc"),
+                    x1=unit(1:(length(unique(name.A))-1),"native"),y1=unit(1,"npc"),
                     gp=gpar(lty="dashed"))
-      grid.segments(x0=unit(length(Avalue),"native"),y0=unit(0,"npc"),
-                    x1=unit(length(Avalue),"native"),y1=unit(1,"npc"))
-      if(length(Dpos)==1) grid.text(rep(c("A","D"),each=c(length(Avalue),length(Dvalue))),
-                                    x=unit(c(1:length(Avalue)-posA,1:length(Avalue)-posD),"native"),
-                                    y=unit(1,"npc")+unit(1,"lines"))
+      grid.segments(x0=unit(length(unique(name.A)),"native"),y0=unit(0,"npc"),
+                    x1=unit(length(unique(name.A)),"native"),y1=unit(1,"npc"))
+      #if(length(Dpos)==1) grid.text(rep(c("A","D"),each=c(length(unique(name.A)),length(unique(name.A)))),
+      #                              x=unit(unique(c(A.x,D.x)),"native"),
+      #                              y=unit(1,"npc")+unit(1,"lines"))
       popViewport()
-
   }
 
 
@@ -1181,8 +1418,8 @@ function(){
 
   epiPlot<-function()
   {
-    trait<-as.numeric(lapply(svalue(widgets$epitrait),function(item){
-                x<-grep(item,get("traitname",envir=.qtlnetworkr))
+    trait<-as.numeric(lapply(strsplit(svalue(widgets$epitrait),split=",")[[1]],function(item){
+                x<-grep(item,get("traitname",envir=.qtlnetworkr),fixed=TRUE)
             }))
     #trait<-as.numeric(svalue(widgets$epitrait))
     blank<-as.numeric(svalue(widgets$blank))
@@ -1414,7 +1651,7 @@ function(){
   QTLNetworkPlot<-function(){
     #trait<-which(is.element(strsplit(svalue(widgets$QTLNtrait),split=", ")[[1]],get("traitname",envir=.qtlnetworkr)))
     trait<-as.numeric(lapply(strsplit(svalue(widgets$QTLNtrait),split=", ")[[1]],function(item){
-                x<-grep(item,get("traitname",envir=.qtlnetworkr))
+                x<-grep(item,get("traitname",envir=.qtlnetworkr),fixed=TRUE)
             }))
     #trait<-as.numeric(svalue(widgets$QTLNtrait))
     chr<-svalue(widgets$QTLNchr)
@@ -1430,11 +1667,12 @@ function(){
     notationFontSize<-as.numeric(svalue(widgets$notationFontSize))
     SymbolSize<-as.numeric(svalue(widgets$symbol))
     ADspace<-as.numeric(svalue(widgets$ADspace))/10
+    paral<-as.numeric(svalue(widgets$ParalDis))/100
 
     mapfile<-get("mapfile",envir=.qtlnetworkr)
     qnkfile<-get("qnkfile",envir=.qtlnetworkr)
     traitlth<-get("traitlth",envir=.qtlnetworkr)
-
+    
     trait_qtl<-grep("_plot_QTL",qnkfile[,1])
     trait_epi<-grep("_plot_epistasis",qnkfile[,1])
     trait_epi1<-grep("_epistasis_effect",qnkfile[,1])
@@ -1495,13 +1733,15 @@ function(){
     if(length(trait_qtl)!=length(trait_epi1)){
         for(i in 1:(length(trait_qtl)-1)){
             if(trait_epi1[k]>traitpos[i]&trait_epi1[k]<traitpos[i+1])  {allow_trait[k]<-i;k<-k+1}
-           
+
         }
         if(trait_epi1[length(trait_epi1)]>trait_qtl[length(trait_qtl)]) allow_trait[k]<-length(trait_qtl)
+    }else{
+        allow_trait<-trait
     }
-    
-    
-    
+
+
+
     #u<-n<-1
     #delete<-0
     #if(length(trait_epi)!=traitlth){
@@ -1511,7 +1751,7 @@ function(){
     #}
     #allow_trait<-1:traitlth
     #if(delete[1]!=0) allow_trait<-allow_trait[-delete]
-    
+
 
     Qe_start<-grep("_QTL_effect",qnkfile[,1])[trait]+2
     Qe_end<-grep("_QTL_heritability",qnkfile[,1])[trait]-1
@@ -1570,7 +1810,7 @@ function(){
     if(length(trait)>1) chr_num <- rep(1:length(trait),Qe_end-Qe_start+1)
 
     #get AE
-    if(!is.na(Qe_Apos[1])){
+    if(!is.na(Qe_AEpos[1])){
       #
       u<-1
       Qe_AE<-matrix(0,nrow=sum(Qe_end+1-Qe_start),ncol=length(Qe_AEpos))
@@ -1623,19 +1863,34 @@ function(){
 
     #get color of qtl with:QTL without AE,red,QTL with AE,blue,AE without QTLe,green
     col_A<-0
-    for(i in 1:length(Qe_A)){
-        if(Qe_A[i]==1&Qe_Ae[i]==0) col_A[i]<-"red"
-        else if(Qe_A[i]==1&Qe_Ae[i]==1) col_A[i]<-"blue"
-        else if(Qe_A[i]==0&Qe_Ae[i]==1) col_A[i]<-"green"
+    if(!is.na(Qe_AEpos[1])){
+        for(i in 1:length(Qe_A)){
+            if(Qe_A[i]==1&Qe_Ae[i]==0) col_A[i]<-"red"
+            else if(Qe_A[i]==1&Qe_Ae[i]==1) col_A[i]<-"blue"
+            else if(Qe_A[i]==0&Qe_Ae[i]==1) col_A[i]<-"green"
+            else col_A[i]<-NA
+        }
+    }else{
+        for(i in 1:length(Qe_A)){
+        if(Qe_A[i]==1) col_A[i]<-"red"
         else col_A[i]<-NA
+        }
     }
+
     if(!is.na(Qe_Dpos[1])){
         col_D<-0
-        for(i in 1:length(Qe_D)){
-            if(Qe_D[i]==1&Qe_De[i]==0) col_D[i]<-"red"
-            else if(Qe_D[i]==1&Qe_De[i]==1) col_D[i]<-"blue"
-            else if(Qe_D[i]==0&Qe_De[i]==1) col_D[i]<-"green"
-            else col_D[i]<-NA
+        if(!is.na(Qe_DEpos[1])){
+            for(i in 1:length(Qe_D)){
+                if(Qe_D[i]==1&Qe_De[i]==0) col_D[i]<-"red"
+                else if(Qe_D[i]==1&Qe_De[i]==1) col_D[i]<-"blue"
+                else if(Qe_D[i]==0&Qe_De[i]==1) col_D[i]<-"green"
+                else col_D[i]<-NA
+            }
+        }else{
+            for(i in 1:length(Qe_D)){
+                if(Qe_D[i]==1) col_D[i]<-"red"
+                else col_D[i]<-NA
+            }
         }
     }
 
@@ -1727,11 +1982,11 @@ function(){
                {
                   if(j==1)
                   {
-                      if(is.element(check_chr[i],check_chr[1:Qe[1]])) 
+                      if(is.element(check_chr[i],check_chr[1:Qe[1]]))
                       {
                           col_A[i]<-ifelse(is.na(col_A[which(check_chr[i]==check_chr[1:Qe[1]])]),"black",col_A[which(check_chr[i]==check_chr[1:Qe[1]])])
                           if(!is.na(Qe_Dpos[1])) ifelse(is.na(col_D[i]<-col_D[which(check_chr[i]==check_chr[1:Qe[1]])]),"black",col_D[i]<-col_D[which(check_chr[i]==check_chr[1:Qe[1]])])
-                      }    
+                      }
                   }else
                   {
                       if(is.element(check_chr[i],check_chr[(Qe[j-1]+1):sum.Qe[j]]))
@@ -1772,58 +2027,68 @@ function(){
         if(!is.na(Qe_Dpos[1])){
           Ee_DDpos<-match("DD",qnkfile[Ee_start[i]-1,])
           Ee_DDEpos<-grep("DDE",qnkfile[Ee_start[i]-1,])
-          if(length(Ee_DDEpos)>0) lth_EeDDE1<-length(Ee_DDEpos)          
-        } 
+          if(length(Ee_DDEpos)>0) lth_EeDDE1<-length(Ee_DDEpos)
+        }
         }else{
         Ee_ptest<-bind(Ee_ptest,(grep(";",qnkfile[Ee_start[i],])-1))
         Ee_AApos<-bind(Ee_AApos,match("AA",qnkfile[Ee_start[i]-1,]))
         Ee_AAEpos<-bind(Ee_AAEpos,grep("AAE",qnkfile[Ee_start[i]-1,]))
         if(!is.na(Qe_Dpos[1])){
            Ee_DDpos<-bind(Ee_DDpos,match("DD",qnkfile[Ee_start[i]-1,]))
-           Ee_DDEpos<-bind(Ee_DDEpos,grep("DDE",qnkfile[Ee_start[i]-1,]))        
+           Ee_DDEpos<-bind(Ee_DDEpos,grep("DDE",qnkfile[Ee_start[i]-1,]))
         }
         }
     }
 
     u<-1;Ee_AA<-0
     #Ee_AAE<-matrix(0,nrow=(Ee_end-Ee_start+1),ncol=length(Ee_AAEpos))
-    Ee_AE<-0
-    for(j in 1:length(trait[traitWithEe])){
-        for(i in Ee_start[j]:Ee_end[j]){
-            if(qnkfile[i,Ee_AApos[j]+2]<0.05) Ee_AA[u]<-1 else Ee_AA[u]<-0
-            u<-u+1
+
+        Ee_AE<-0
+        for(j in 1:length(trait[traitWithEe])){
+            for(i in Ee_start[j]:Ee_end[j]){
+                if(qnkfile[i,Ee_AApos[j]+2]<0.05) Ee_AA[u]<-1 else Ee_AA[u]<-0
+                u<-u+1
+            }
         }
-    }
-    u<-1
-    Ee_AAE<-matrix(0,nrow=sum(Ee_end+1-Ee_start),ncol=length(Ee_AAEpos))
-      for(k in 1:length(trait[traitWithEe])){
-          #st<-ifelse(k==1,1,lth_EeAAE1+1)
-          #ed<-ifelse(k==1,lth_EeAAE1,length(Ee_AAEpos))
-          limit<-((k-1)*lth_EeAAE1+1):(k*lth_EeAAE1)
-          for(i in Ee_start[k]:Ee_end[k]){
-              for(j in limit){
-                if(qnkfile[i,Ee_AAEpos[j]+2]<=0.05) Ee_AAE[u,j]<-1
-                else Ee_AAE[u,j]<-0
+    if(!is.na(Ee_AAEpos[1])){
+        u<-1
+        Ee_AAE<-matrix(0,nrow=sum(Ee_end+1-Ee_start),ncol=length(Ee_AAEpos))
+          for(k in 1:length(trait[traitWithEe])){
+              #st<-ifelse(k==1,1,lth_EeAAE1+1)
+              #ed<-ifelse(k==1,lth_EeAAE1,length(Ee_AAEpos))
+              limit<-((k-1)*lth_EeAAE1+1):(k*lth_EeAAE1)
+              for(i in Ee_start[k]:Ee_end[k]){
+                  for(j in limit){
+                    if(qnkfile[i,Ee_AAEpos[j]+2]<=0.05) Ee_AAE[u,j]<-1
+                    else Ee_AAE[u,j]<-0
+                  }
+                  u<-u+1
               }
-              u<-u+1
           }
-      }
-    Ee_AE<-apply(Ee_AAE,1,function(item){
-               if(is.element(1,item))  n<-1 else n<-0
-           })
+        Ee_AE<-apply(Ee_AAE,1,function(item){
+                   if(is.element(1,item))  n<-1 else n<-0
+               })
+    }
 
 
     col_AA<-0
-    for(i in 1:length(Ee_AA)){
-        if(Ee_AA[i]==1&Ee_AE[i]==0) col_AA[i]<-"red"
-        else if(Ee_AA[i]==1&Ee_AE[i]==1) col_AA[i]<-"blue"
-        else if(Ee_AA[i]==0&Ee_AE[i]==1) col_AA[i]<-"green"
-        else col_AA[i]<-NA
+    if(!is.na(Ee_AAEpos[1])){
+        for(i in 1:length(Ee_AA)){
+            if(Ee_AA[i]==1&Ee_AE[i]==0) col_AA[i]<-"red"
+            else if(Ee_AA[i]==1&Ee_AE[i]==1) col_AA[i]<-"blue"
+            else if(Ee_AA[i]==0&Ee_AE[i]==1) col_AA[i]<-"green"
+            else col_AA[i]<-NA
+        }
+    }else{
+        for(i in 1:length(Ee_AA)){
+            if(Ee_AA[i]==1) col_AA[i]<-"red"
+            else col_AA[i]<-NA
+        }
     }
 
     if(!is.na(Qe_Dpos[1])){
         Ee_ADpos<-Ee_DApos<-Ee_DDpos<-Ee_ADEpos<-Ee_DAEpos<-Ee_DDEpos<-0
-        for(i in 1:length(Qe_Dpos)){
+        for(i in 1:length(traitWithEe)){
           if(i==1){
             Ee_ADpos<-match("AD",qnkfile[Ee_start[i]-1,])
             Ee_DApos<-match("DA",qnkfile[Ee_start[i]-1,])
@@ -1838,7 +2103,7 @@ function(){
             Ee_ADEpos<-bind(Ee_ADEpos,grep("ADE",qnkfile[Ee_start[i]-1,]))
             Ee_DAEpos<-bind(Ee_DAEpos,grep("DAE",qnkfile[Ee_start[i]-1,]))
             Ee_DDEpos<-bind(Ee_DDEpos,grep("DDE",qnkfile[Ee_start[i]-1,]))
-          }        
+          }
         }
         Ee_AD<-Ee_DA<-Ee_DD<-Ee_ADE<-Ee_DAE<-Ee_DDE<-0
         u<-1
@@ -1902,7 +2167,7 @@ function(){
     }
     if(!is.na(Qe_Dpos[1])){
         for(i in 1:length(col_AD)){
-            ####if A or D is NA, but it has E effect, so it need a black symbol to present it. 
+            ####if A or D is NA, but it has E effect, so it need a black symbol to present it.
             if(!is.na(col_AD[i])){
                 if(is.na(col_A[sum(Qe)+i]))   col_A[sum(Qe)+i]<-"black"
                 if(is.na(col_D[sum(Qe)+sum(Ee)+i]))  col_D[sum(Qe)+sum(Ee)+i]<-"black"
@@ -1936,7 +2201,7 @@ function(){
     {
        if(which(chr_info[i]==sort(c(chr_info[i],misschr)))>1) adjust.chrinfo[i]<-chr_info[i]-which(chr_info[i]==sort(c(chr_info[i],misschr)))+1
     }
-    myline<-c("dotted","dotdash","dashed","solid","431313")
+    myline<-c("dotted","dotdash","dashed","solid","431313","longdash","twodash","F8","22848222","13")
     if(length(traitWithEe)) myLine<-rep(myline[1:length(Ee)],Ee)
      #####adjust
      #col_A[38]<-"black"   ##different traits
@@ -1944,26 +2209,98 @@ function(){
      #pos[14]<-pos[5]+1  ##4-7
      #pos[23]<-pos[5]-1.5 ##"4-7"
      #pos[22]<-pos[4]+1 ## "3-2"
+    for(i in 1:length(chrlth))
+    {
+        num<-which(chr_info==i)
+        cross<-0
+        n<-1
+        if(length(num)>1)
+        {
+            check.order<-order(pos[num])
+            for(j in 2:length(num))
+            {
+                #if(crossing(pos_st[num][check.order[n]],pos_ed[num][check.order[n]],pos_st[num][check.order[j]],pos_ed[num][check.order[j]]))   print(j)
+                if(crossing(pos_st[num][check.order[n]],pos_ed[num][check.order[n]],pos_st[num][check.order[j]],pos_ed[num][check.order[j]])&j==length(num))
+                {
+                    pos.std<-sum(pos[num][check.order[n:j]])/(j-n+1)
+                    pos.st.std<-sum(pos_st[num][check.order[n:j]])/(j-n+1)
+                    pos.ed.std<-sum(pos_ed[num][check.order[n:j]])/(j-n+1)
+                    pos[num][check.order[n:j]]<-pos.std
+                    pos_st[num][check.order[n:j]]<-pos.st.std
+                    pos_ed[num][check.order[n:j]]<-pos.ed.std
+                    check_chr[num][check.order[n:j]]<-check_chr[num][check.order[n]]
+                }
+                if(!crossing(pos_st[num][check.order[n]],pos_ed[num][check.order[n]],pos_st[num][check.order[j]],pos_ed[num][check.order[j]]))
+                {
+                    if(j>n+1){
+                        pos.std<-sum(pos[num][check.order[n:(j-1)]])/(j-n)
+                        pos.st.std<-sum(pos_st[num][check.order[n:(j-1)]])/(j-n)
+                        pos.ed.std<-sum(pos_ed[num][check.order[n:(j-1)]])/(j-n)
+                        pos[num][check.order[n:(j-1)]]<-pos.std
+                        pos_st[num][check.order[n:(j-1)]]<-pos.st.std
+                        pos_ed[num][check.order[n:(j-1)]]<-pos.ed.std
+                        check_chr[num][check.order[n:(j-1)]]<-check_chr[num][check.order[n]]
+                        n<-j
+                    }else n<-j
+                }
+            }
+        }
+    }
+     if(Text=="Yes"){
+        dup<-which(duplicated(check_chr))
+        undup<- which(!duplicated(check_chr))
+        uniq_check_chr<-unique(check_chr)
+        if (length(dup)>0){
+            uniq_chrinfo<-chr_info[-dup]
+            dup.pos<-pos[-dup]
+        }else{
+            uniq_chrinfo<-chr_info
+            dup.pos<-pos
+        }
+     }
+
+
 
     #legend
-    vplay<-grid.layout(nrow=2,height=unit(c(1,9),c("null","null")))
-    pushViewport(viewport(layout=vplay))
-    pushViewport(viewport(layout.pos.row=1,name="row1"))
     mytextA<-c("A","AE","A+AE")
     mytextI<-c("I","IE","I+IE")
     if(!is.na(Qe_Dpos[1])) mytextD<-c("D","DE","D+DE")
     mytextT<-traitname
-    mycol<-c("red","blue","green")
+    mycol<-c("red","green","blue")
     m<-3;n<-length(trait)
     ver<-unit(c(0.75,0.5,0.25),"npc")
-    x3<-rep(unit(0.5,"npc"),time=n)
-    x2<-rep(unit(0.3,"npc"),time=m)
-    x1<-rep(unit(0.02,"npc"),time=m)
-    x4<-rep(unit(0.15,"npc"),time=m)
-    notpch<-c(22,24,21,23)
-    mypch<-c(15,17,16,18)
+    if(n<=5){
+        x3<-rep(unit(0.02,"npc"),time=5)
+        trait.ver<-unit(c(0.75,0.5,0.25,0,-0.25),"npc")
+    }else if(n==6){
+        x3<-unit(c(rep(0.02,time=5),rep(0.35,time=1),rep(0.67,time=1)),"npc")
+        trait.ver<-unit(c(0.75,0.5,0.25,0,0,0),"npc")
+    }else if(n==7){
+        x3<-unit(c(rep(0.02,time=5),rep(0.35,time=1),rep(0.67,time=1)),"npc")
+        trait.ver<-unit(c(0.75,0.5,0.25,0,-0.25,0,0),"npc")
+    }else if(n==8){
+        x3<-unit(c(rep(0.02,time=5),rep(0.35,time=2),rep(0.67,time=1)),"npc")
+        trait.ver<-unit(c(0.75,0.5,0.25,0,-0.25,0,-0.25,0),"npc")
+    }else if(n==9){
+        x3<-unit(c(rep(0.02,time=5),rep(0.35,time=2),rep(0.67,time=2)),"npc")
+        trait.ver<-unit(c(0.75,0.5,0.25,0,-0.25,0,-0.25,0,-0.25),"npc")
+    }else if(n==10){
+        x3<-unit(c(rep(0.02,time=6),rep(0.35,time=2),rep(0.67,time=2)),"npc")
+        trait.ver<-unit(c(0.75,0.5,0.25,0,-0.25,-0.5,0,-0.25,0,-0.25),"npc")
+    }
+
+    if(!is.na(Qe_Dpos[1])) x2<-rep(unit(0.8,"npc"),time=m) else x2<-rep(unit(0.65,"npc"),time=m)
+    x1<-rep(unit(0.5,"npc"),time=m)
+
+    if(n<=5) mypch<-c(22,24,25,23,21) else mypch<-LETTERS[1:10]
+
+
+    vplay<-grid.layout(nrow=2,height=unit(c(1,9),c("null","null")))
+    pushViewport(viewport(layout=vplay))
+    pushViewport(viewport(layout.pos.row=1,name="row1"))
     grid.points(x=x1,y=ver,pch=16,gp=gpar(col=mycol,cex=SymbolSize))
     if(!is.na(Qe_Dpos[1])) {
+         x4<-rep(unit(0.65,"npc"),time=m)
          grid.points(x=x4,y=ver,pch=21,gp=gpar(col=mycol,cex=SymbolSize))
          grid.text(mytextD,x=x4+unit(0.02,"npc"),y=ver,just="left",
             gp=gpar(cex=notationFontSize,font=notationFont))
@@ -1977,17 +2314,24 @@ function(){
             gp=gpar(cex=notationFontSize,font=notationFont))
     grid.text(mytextI,x=x2+unit(0.07,"npc"),y=ver,just="left",
             gp=gpar(cex=notationFontSize,font=notationFont))
-    if(n<5){
-        trait.ver<-unit(c(0.75,0.5,0.25,0),"npc")
-        grid.points(x=x3,y=trait.ver[1:n],pch=mypch[1:n],gp=gpar(cex=SymbolSize))
-        grid.text("&",x=x3+unit(0.02,"npc"),y=trait.ver[1:n],just="left",gp=gpar(cex=SymbolSize))
-        for(i in 1:n){
-        grid.segments(x0=x3[i]+unit(0.05,"npc"),x1=x3[i]+unit(0.1,"npc"),
-                      y0=trait.ver[i],y1=trait.ver[i],gp=gpar(lty=myline[i]))
+
+        #trait.ver<-unit(c(0.75,0.5,0.25,0,-0.25,-0.25,-0.25,-0.5,-0.5,-0.5),"npc")
+    #for(i in 1:n)  grid.points(x=x3[i],y=trait.ver[i],pch=mypch[i],gp=gpar(cex=SymbolSize))
+    grid.points(x=x3[1:n],y=trait.ver[1:n],pch=mypch[1:n],gp=gpar(cex=SymbolSize))
+    for(i in 1:n){
+        if(!is.na(match(i,traitWithEe))){
+            grid.text("&",x=x3[i]+unit(0.02,"npc"),y=trait.ver[i],just="left",gp=gpar(cex=SymbolSize))
+            grid.segments(x0=x3[i]+unit(0.05,"npc"),x1=x3[i]+unit(0.1,"npc"),
+                          y0=trait.ver[i],y1=trait.ver[i],gp=gpar(lty=myline[i]))
+            grid.text(mytextT[i],x=x3[i]+unit(0.12,"npc"),y=trait.ver[i],just="left",
+                          gp=gpar(cex=notationFontSize,font=notationFont))
+        }else{
+            grid.text(mytextT[i],x=x3[i]+unit(0.02,"npc"),y=trait.ver[i],just="left",
+                          gp=gpar(cex=notationFontSize,font=notationFont))
         }
-        grid.text(mytextT,x=x3+unit(0.12,"npc"),y=trait.ver[1:n],just="left",
-                gp=gpar(cex=notationFontSize,font=notationFont))
     }
+
+
 
     popViewport()
     pushViewport(viewport(layout.pos.row=2,name="row2"))
@@ -2002,7 +2346,7 @@ function(){
     }
 
 
-    Dpch<-c(22,24,21,23)
+    Dpch<-mypch
     ### QTL
     k<-1
     for(i in 1:length(Qe))
@@ -2012,7 +2356,7 @@ function(){
            grid.points(
                        x=unit(pos[1:Qe[i]]/xlabel[chr_info[1:Qe[i]]],"npc"),
                        y=unit(col_unit*(adjust.chrinfo[1:Qe[i]]-1),"npc"),
-                       pch=mypch[i],gp=gpar(col=col_A[1:Qe[i]],cex=SymbolSize)
+                       pch=mypch[i],gp=gpar(col=col_A[1:Qe[i]],fill=col_A[1:Qe[i]],cex=SymbolSize)
                        )
            if(!is.na(Qe_Dpos[1])){
                grid.points(
@@ -2028,7 +2372,7 @@ function(){
                    grid.points(
                                x=unit(pos[c(1:Ee[i],1:Ee[i]+sum(Ee))+sum(Qe)]/xlabel[chr_info[c(1:Ee[i],1:Ee[i]+sum(Ee))+sum(Qe)]],"npc"),
                                y=unit(col_unit*(adjust.chrinfo[c(1:Ee[i],1:Ee[i]+sum(Ee))+sum(Qe)]-1),"npc"),
-                               pch=mypch[i],gp=gpar(col=col_A[c(1:Ee[i],1:Ee[i]+sum(Ee))+sum(Qe)],cex=SymbolSize)
+                               pch=mypch[i],gp=gpar(col=col_A[c(1:Ee[i],1:Ee[i]+sum(Ee))+sum(Qe)],fill=col_A[c(1:Ee[i],1:Ee[i]+sum(Ee))+sum(Qe)],cex=SymbolSize)
                                )
                    if(!is.na(Qe_Dpos[1])){
                       grid.points(
@@ -2044,7 +2388,7 @@ function(){
            grid.points(
                        x=unit(pos[(sum.Qe[i-1]+1):sum.Qe[i]]/xlabel[chr_info[(sum.Qe[i-1]+1):sum.Qe[i]]],"npc"),
                        y=unit(col_unit*(adjust.chrinfo[(sum.Qe[i-1]+1):sum.Qe[i]]-1),"npc"),
-                       pch=mypch[i],gp=gpar(col=col_A[(sum.Qe[i-1]+1):sum.Qe[i]],cex=SymbolSize)
+                       pch=mypch[i],gp=gpar(col=col_A[(sum.Qe[i-1]+1):sum.Qe[i]],fill=col_A[(sum.Qe[i-1]+1):sum.Qe[i]],cex=SymbolSize)
                        )
            if(!is.na(Qe_Dpos[1])){
                  grid.points(
@@ -2061,7 +2405,7 @@ function(){
                            grid.points(
                                        x=unit(pos[c(1:Ee[k],1:Ee[k]+sum(Ee))+sum(Qe)]/xlabel[chr_info[c(1:Ee[k],1:Ee[k]+sum(Ee))+sum(Qe)]],"npc"),
                                        y=unit(col_unit*(adjust.chrinfo[c(1:Ee[k],1:Ee[k]+sum(Ee))+sum(Qe)]-1),"npc"),
-                                       pch=mypch[i],gp=gpar(col=col_A[c(1:Ee[k],1:Ee[k]+sum(Ee))+sum(Qe)],cex=SymbolSize)
+                                       pch=mypch[i],gp=gpar(col=col_A[c(1:Ee[k],1:Ee[k]+sum(Ee))+sum(Qe)],fill=col_A[c(1:Ee[k],1:Ee[k]+sum(Ee))+sum(Qe)],cex=SymbolSize)
                                        )
                            if(!is.na(Qe_Dpos[1])){
                                  grid.points(
@@ -2070,7 +2414,7 @@ function(){
                                        pch=Dpch[i],gp=gpar(col=col_D[c(1:Ee[k],1:Ee[k]+sum(Ee))+sum(Qe)],cex=SymbolSize)
                                        )
                            }
-                           k<-k+1
+                           if(k<length(traitWithEe)) k<-k+1
                        }
                    }
                }else{
@@ -2081,7 +2425,7 @@ function(){
                            grid.points(
                                        x=unit(pos[c((sum.Ee[k-1]+1):sum.Ee[k],(sum.Ee[k-1]+1):sum.Ee[k]+sum(Ee))+sum(Qe)]/xlabel[chr_info[c((sum.Ee[k-1]+1):sum.Ee[k],(sum.Ee[k-1]+1):sum.Ee[k]+sum(Ee))+sum(Qe)]],"npc"),
                                        y=unit(col_unit*(adjust.chrinfo[c((sum.Ee[k-1]+1):sum.Ee[k],(sum.Ee[k-1]+1):sum.Ee[k]+sum(Ee))+sum(Qe)]-1),"npc"),
-                                       pch=mypch[i],gp=gpar(col=col_A[c((sum.Ee[k-1]+1):sum.Ee[k],(sum.Ee[k-1]+1):sum.Ee[k]+sum(Ee))+sum(Qe)],cex=SymbolSize)
+                                       pch=mypch[i],gp=gpar(col=col_A[c((sum.Ee[k-1]+1):sum.Ee[k],(sum.Ee[k-1]+1):sum.Ee[k]+sum(Ee))+sum(Qe)],fill=col_A[c((sum.Ee[k-1]+1):sum.Ee[k],(sum.Ee[k-1]+1):sum.Ee[k]+sum(Ee))+sum(Qe)],cex=SymbolSize)
                                        )
                            if(!is.na(Qe_Dpos[1])){
                                  grid.points(
@@ -2090,7 +2434,7 @@ function(){
                                        pch=Dpch[i],gp=gpar(col=col_D[c((sum.Ee[k-1]+1):sum.Ee[k],(sum.Ee[k-1]+1):sum.Ee[k]+sum(Ee))+sum(Qe)],cex=SymbolSize)
                                        )
                            }
-                           k<-k+1
+                           if(k<length(traitWithEe)) k<-k+1
                        }
                    }
                }
@@ -2099,82 +2443,117 @@ function(){
     ###epistasis
     if(length(traitWithEe)>0)
     {
-        #if(any(adjust.chrinfo[sum(Qe)+1:sum(Ee)]==adjust.chrinfo[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]))
-        #{
-        #    sameIdx<-which(adjust.chrinfo[sum(Qe)+1:sum(Ee)]==adjust.chrinfo[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))])
-        #    grid.segments(x0=unit(pos[sum(Qe)+1:sum(Ee)][-sameIdx]/xlabel[chr_info[sum(Qe)+1:sum(Ee)]][-sameIdx],"npc"),
-        #                  x1=unit(pos[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))][-sameIdx]/xlabel[chr_info[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]][-sameIdx],"npc"),
-        #                  y0=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)]-1)[-sameIdx],"npc"),
-        #                  y1=unit(col_unit*(adjust.chrinfo[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]-1)[-sameIdx],"npc"),
-        #                  gp=gpar(col=col_AA[-sameIdx],lty=myLine[-sameIdx],lwd=epiLineWidth)
-        #                  )
-        #    grid.segments(x0=unit(pos[sum(Qe)+1:sum(Ee)][sameIdx]/xlabel[chr_info[sum(Qe)+1:sum(Ee)]][sameIdx],"npc"),
-        #                  x1=unit(pos[sum(Qe)+1:sum(Ee)][sameIdx]/xlabel[chr_info[sum(Qe)+1:sum(Ee)]][sameIdx],"npc"),
-        #                  y0=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)][sameIdx]-1),"npc"),
-        #                  y1=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)][sameIdx]-1)+0.04,"npc"),
-        #                  gp=gpar(col=col_AA[sameIdx],lty=myLine[sameIdx],lwd=epiLineWidth)
-        #                  )
-        #    grid.segments(x0=unit(pos[sum(Qe)+1:sum(Ee)][sameIdx]/xlabel[chr_info[sum(Qe)+1:sum(Ee)]][sameIdx],"npc"),
-        #                  x1=unit(pos[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))][sameIdx]/xlabel[chr_info[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]][sameIdx],"npc"),
-        #                  y0=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)][sameIdx]-1)+0.04,"npc"),
-        #                  y1=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)][sameIdx]-1)+0.04,"npc"),
-        #                  gp=gpar(col=col_AA[sameIdx],lty=myLine[sameIdx],lwd=epiLineWidth)
-        #                  )
-        #    grid.segments(x0=unit(pos[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))][sameIdx]/xlabel[chr_info[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]][sameIdx],"npc"),
-        #                  x1=unit(pos[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))][sameIdx]/xlabel[chr_info[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]][sameIdx],"npc"),
-        #                  y0=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)][sameIdx]-1)+0.04,"npc"),
-        #                 y1=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)][sameIdx]-1),"npc"),
-        #                  gp=gpar(col=col_AA[sameIdx],lty=myLine[sameIdx],lwd=epiLineWidth)
-        #                  )
-        #}else{
+        if(any(adjust.chrinfo[sum(Qe)+1:sum(Ee)]==adjust.chrinfo[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]))
+        {
+            sameIdx<-which(adjust.chrinfo[sum(Qe)+1:sum(Ee)]==adjust.chrinfo[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))])
+            grid.segments(x0=unit(pos[sum(Qe)+1:sum(Ee)][-sameIdx]/xlabel[chr_info[sum(Qe)+1:sum(Ee)][-sameIdx]],"npc"),
+                          x1=unit(pos[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))][-sameIdx]/xlabel[chr_info[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))][-sameIdx]],"npc"),
+                          y0=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)]-1)[-sameIdx],"npc"),
+                          y1=unit(col_unit*(adjust.chrinfo[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]-1)[-sameIdx],"npc"),
+                          gp=gpar(col=col_AA[-sameIdx],lty=myLine[-sameIdx],lwd=epiLineWidth)
+                          )
+            grid.segments(x0=unit(pos[sum(Qe)+1:sum(Ee)][sameIdx]/xlabel[chr_info[sum(Qe)+1:sum(Ee)]][sameIdx],"npc"),
+                          x1=unit(pos[sum(Qe)+1:sum(Ee)][sameIdx]/xlabel[chr_info[sum(Qe)+1:sum(Ee)]][sameIdx],"npc"),
+                          y0=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)][sameIdx]-1),"npc"),
+                          y1=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)][sameIdx]-1)+paral,"npc"),
+                          gp=gpar(col=col_AA[sameIdx],lty=myLine[sameIdx],lwd=epiLineWidth)
+                          )
+            grid.segments(x0=unit(pos[sum(Qe)+1:sum(Ee)][sameIdx]/xlabel[chr_info[sum(Qe)+1:sum(Ee)]][sameIdx],"npc"),
+                          x1=unit(pos[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))][sameIdx]/xlabel[chr_info[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]][sameIdx],"npc"),
+                          y0=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)][sameIdx]-1)+paral,"npc"),
+                          y1=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)][sameIdx]-1)+paral,"npc"),
+                          gp=gpar(col=col_AA[sameIdx],lty=myLine[sameIdx],lwd=epiLineWidth)
+                          )
+            grid.segments(x0=unit(pos[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))][sameIdx]/xlabel[chr_info[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]][sameIdx],"npc"),
+                          x1=unit(pos[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))][sameIdx]/xlabel[chr_info[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]][sameIdx],"npc"),
+                          y0=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)][sameIdx]-1)+paral,"npc"),
+                         y1=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)][sameIdx]-1),"npc"),
+                          gp=gpar(col=col_AA[sameIdx],lty=myLine[sameIdx],lwd=epiLineWidth)
+                          )
+            if(!is.na(Qe_Dpos[1])){
+                if(!is.na(Ee_ADpos[1])){
+                    grid.segments(x0=unit(pos[sum(Qe)+1:sum(Ee)]/xlabel[chr_info[sum(Qe)+1:sum(Ee)]],"npc"),
+                          x1=unit(pos[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]/xlabel[chr_info[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]],"npc"),
+                          y0=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)]-1),"npc"),
+                          y1=unit(col_unit*(adjust.chrinfo[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]-1),"npc")+unit(ADspace*SymbolSize,"cm"),
+                          gp=gpar(col=col_AD,lty=myLine,lwd=epiLineWidth)
+                          )
+                }
+                if(!is.na(Ee_DApos[1])){
+                    grid.segments(x0=unit(pos[sum(Qe)+1:sum(Ee)]/xlabel[chr_info[sum(Qe)+1:sum(Ee)]],"npc"),
+                          x1=unit(pos[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]/xlabel[chr_info[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]],"npc"),
+                          y0=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)]-1),"npc")+unit(ADspace*SymbolSize,"cm"),
+                          y1=unit(col_unit*(adjust.chrinfo[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]-1),"npc"),
+                          gp=gpar(col=col_DA,lty=myLine,lwd=epiLineWidth)
+                          )
+                }
+                if(!is.na(Ee_DDpos[1])){
+                    grid.segments(x0=unit(pos[sum(Qe)+1:sum(Ee)][-sameIdx]/xlabel[chr_info[sum(Qe)+1:sum(Ee)][-sameIdx]],"npc"),
+                          x1=unit(pos[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))][-sameIdx]/xlabel[chr_info[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))][-sameIdx]],"npc"),
+                          y0=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)]-1)[-sameIdx],"npc")+unit(ADspace*SymbolSize,"cm"),
+                          y1=unit(col_unit*(adjust.chrinfo[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]-1)[-sameIdx],"npc")+unit(ADspace*SymbolSize,"cm"),
+                          gp=gpar(col=col_DD[-sameIdx],lty=myLine[-sameIdx],lwd=epiLineWidth)
+                          )
+                    grid.segments(x0=unit(pos[sum(Qe)+1:sum(Ee)][sameIdx]/xlabel[chr_info[sum(Qe)+1:sum(Ee)]][sameIdx],"npc"),
+                                  x1=unit(pos[sum(Qe)+1:sum(Ee)][sameIdx]/xlabel[chr_info[sum(Qe)+1:sum(Ee)]][sameIdx],"npc"),
+                                  y0=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)][sameIdx]-1),"npc")+unit(ADspace*SymbolSize,"cm"),
+                                  y1=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)][sameIdx]-1)+paral,"npc")+unit(ADspace*SymbolSize,"cm"),
+                                  gp=gpar(col=col_DD[sameIdx],lty=myLine[sameIdx],lwd=epiLineWidth)
+                                  )
+                    grid.segments(x0=unit(pos[sum(Qe)+1:sum(Ee)][sameIdx]/xlabel[chr_info[sum(Qe)+1:sum(Ee)]][sameIdx],"npc"),
+                                  x1=unit(pos[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))][sameIdx]/xlabel[chr_info[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]][sameIdx],"npc"),
+                                  y0=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)][sameIdx]-1)+paral,"npc")+unit(ADspace*SymbolSize,"cm"),
+                                  y1=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)][sameIdx]-1)+paral,"npc")+unit(ADspace*SymbolSize,"cm"),
+                                  gp=gpar(col=col_DD[sameIdx],lty=myLine[sameIdx],lwd=epiLineWidth)
+                                  )
+                    grid.segments(x0=unit(pos[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))][sameIdx]/xlabel[chr_info[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]][sameIdx],"npc"),
+                                  x1=unit(pos[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))][sameIdx]/xlabel[chr_info[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]][sameIdx],"npc"),
+                                  y0=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)][sameIdx]-1)+paral,"npc")+unit(ADspace*SymbolSize,"cm"),
+                                 y1=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)][sameIdx]-1),"npc")+unit(ADspace*SymbolSize,"cm"),
+                                  gp=gpar(col=col_DD[sameIdx],lty=myLine[sameIdx],lwd=epiLineWidth)
+                                  )
+                }
+              }
+        }else{
               grid.segments(x0=unit(pos[sum(Qe)+1:sum(Ee)]/xlabel[chr_info[sum(Qe)+1:sum(Ee)]],"npc"),
                             x1=unit(pos[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]/xlabel[chr_info[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]],"npc"),
                             y0=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)]-1),"npc"),
                             y1=unit(col_unit*(adjust.chrinfo[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]-1),"npc"),
                             gp=gpar(col=col_AA,lty=myLine,lwd=epiLineWidth)
                             )
-              if(!is.na(Ee_ADpos[1])){
-                  grid.segments(x0=unit(pos[sum(Qe)+1:sum(Ee)]/xlabel[chr_info[sum(Qe)+1:sum(Ee)]],"npc"),
-                            x1=unit(pos[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]/xlabel[chr_info[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]],"npc"),
-                            y0=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)]-1),"npc"),
-                            y1=unit(col_unit*(adjust.chrinfo[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]-1),"npc")+unit(ADspace*SymbolSize,"cm"),
-                            gp=gpar(col=col_AD,lty=myLine,lwd=epiLineWidth)
-                            )
+              if(!is.na(Qe_Dpos[1])){
+                if(!is.na(Ee_ADpos[1])){
+                    grid.segments(x0=unit(pos[sum(Qe)+1:sum(Ee)]/xlabel[chr_info[sum(Qe)+1:sum(Ee)]],"npc"),
+                              x1=unit(pos[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]/xlabel[chr_info[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]],"npc"),
+                              y0=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)]-1),"npc"),
+                              y1=unit(col_unit*(adjust.chrinfo[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]-1),"npc")+unit(ADspace*SymbolSize,"cm"),
+                              gp=gpar(col=col_AD,lty=myLine,lwd=epiLineWidth)
+                              )
+                }
+                if(!is.na(Ee_DApos[1])){
+                    grid.segments(x0=unit(pos[sum(Qe)+1:sum(Ee)]/xlabel[chr_info[sum(Qe)+1:sum(Ee)]],"npc"),
+                              x1=unit(pos[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]/xlabel[chr_info[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]],"npc"),
+                              y0=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)]-1),"npc")+unit(ADspace*SymbolSize,"cm"),
+                              y1=unit(col_unit*(adjust.chrinfo[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]-1),"npc"),
+                              gp=gpar(col=col_DA,lty=myLine,lwd=epiLineWidth)
+                              )
+                }
+                if(!is.na(Ee_DDpos[1])){
+                    grid.segments(x0=unit(pos[sum(Qe)+1:sum(Ee)]/xlabel[chr_info[sum(Qe)+1:sum(Ee)]],"npc"),
+                              x1=unit(pos[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]/xlabel[chr_info[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]],"npc"),
+                              y0=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)]-1),"npc")+unit(ADspace*SymbolSize,"cm"),
+                              y1=unit(col_unit*(adjust.chrinfo[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]-1),"npc")+unit(ADspace*SymbolSize,"cm"),
+                              gp=gpar(col=col_DD,lty=myLine,lwd=epiLineWidth)
+                              )
+                }
               }
-              if(!is.na(Ee_DApos[1])){
-                  grid.segments(x0=unit(pos[sum(Qe)+1:sum(Ee)]/xlabel[chr_info[sum(Qe)+1:sum(Ee)]],"npc"),
-                            x1=unit(pos[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]/xlabel[chr_info[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]],"npc"),
-                            y0=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)]-1),"npc")+unit(ADspace*SymbolSize,"cm"),
-                            y1=unit(col_unit*(adjust.chrinfo[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]-1),"npc"),
-                            gp=gpar(col=col_DA,lty=myLine,lwd=epiLineWidth)
-                            )
-              }
-              if(!is.na(Ee_DDpos[1])){
-                  grid.segments(x0=unit(pos[sum(Qe)+1:sum(Ee)]/xlabel[chr_info[sum(Qe)+1:sum(Ee)]],"npc"),
-                            x1=unit(pos[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]/xlabel[chr_info[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]],"npc"),
-                            y0=unit(col_unit*(adjust.chrinfo[sum(Qe)+1:sum(Ee)]-1),"npc")+unit(ADspace*SymbolSize,"cm"),
-                            y1=unit(col_unit*(adjust.chrinfo[sum(Qe)+(sum(Ee)+1):(2*sum(Ee))]-1),"npc")+unit(ADspace*SymbolSize,"cm"),
-                            gp=gpar(col=col_DD,lty=myLine,lwd=epiLineWidth)
-                            )
-              }
-        #}
+        }
     }
 
     grid.text(paste(chr,uniq_chr_info,sep=""),x=unit(-1.5,"lines"),y=unit(col_unit*(1:length(uniq_chr_info)-1),"npc"),
               gp=gpar(cex=chrFontSize,font=chrFont))
 
     if(Text=="Yes"){
-        dup<-which(duplicated(check_chr))
-        undup<- which(!duplicated(check_chr))
-        uniq_check_chr<-unique(check_chr)
-        if (length(dup)>0){
-            uniq_chrinfo<-chr_info[-dup]
-            dup.pos<-pos[-dup]
-        }else{
-            uniq_chrinfo<-chr_info
-            dup.pos<-pos
-        }
-
         grid.text(uniq_check_chr,x=unit(dup.pos/xlabel[uniq_chrinfo],"npc"),
                   y=unit(col_unit*(adjust.chrinfo[undup]-1)-TextPosition,"npc"),
                   gp=gpar(cex=TextFontSize,font=TextFont))
